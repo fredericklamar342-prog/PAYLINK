@@ -142,9 +142,7 @@ test("long payment content wraps and full review precedes approval", async ({
   await page.setViewportSize({ width: 320, height: 812 });
   await page.goto(`/pay/${payment.id}`);
   const summary = await page.locator(".payment-summary").boundingBox();
-  const approval = await page
-    .getByRole("region", { name: "Your approval" })
-    .boundingBox();
+  const approval = await page.locator(".payment-actions").boundingBox();
   expect(summary!.y + summary!.height).toBeLessThanOrEqual(approval!.y);
   await expect(page.locator(".ticket-amount")).toContainText(payment.amount);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
@@ -177,7 +175,7 @@ test("reduced motion disables movement and public content works without JavaScri
   await staticPage.goto(new URL("/", page.url()).href);
   await expect(
     staticPage.getByRole("heading", {
-      name: "Request a payment. Share a link.",
+      name: "Get Paid in Crypto. Just Share a Link.",
     }),
   ).toBeVisible();
   await expect(
@@ -187,6 +185,27 @@ test("reduced motion disables movement and public content works without JavaScri
     staticPage.getByRole("article", { name: "Payment ticket preview" }),
   ).toBeVisible();
   await context.close();
+});
+
+test("expiration presets explain local time and custom expiry validates inline", async ({ page }) => {
+  await page.goto("/create");
+  const group = page.getByRole("group", { name: "Payment link expiration" });
+  const day = group.getByRole("button", { name: "24 hours", exact: true });
+  await day.click();
+  await expect(day).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("This payment link will expire in 24 hours.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Expires .+ in your local timezone\./)).toBeVisible();
+
+  await group.getByRole("button", { name: "Custom", exact: true }).click();
+  const custom = page.locator("#expiry");
+  await expect(custom).toBeVisible();
+  await custom.fill("2020-01-01T12:00");
+  await page.locator("#amount").fill(draft.amount);
+  await page.locator("#recipient").fill(draft.recipient);
+  await page.locator("#description").fill(draft.description);
+  await page.getByRole("button", { name: "Create Payment Link", exact: true }).click();
+  await expect(custom).toBeFocused();
+  await expect(page.getByText("Choose an expiry in the future.", { exact: true })).toBeVisible();
 });
 
 test("form errors are described before focus and results restore focus", async ({ page }) => {

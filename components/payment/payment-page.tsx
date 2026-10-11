@@ -15,6 +15,7 @@ import { PaymentTicket } from "./payment-ticket";
 import { PaymentSummary } from "./payment-summary";
 import { QrPayment } from "./qr-payment";
 import { usePayment } from "./use-payment";
+import { ExpiryCountdown } from "./expiry-countdown";
 
 export function PaymentPage({ id }: { id: string }) {
   const payment = decodePayment(id);
@@ -66,9 +67,23 @@ export function PaymentRequestView({
         <span className="section-kicker">
           Payment request
         </span>
-        <h1>Review your payment.</h1>
-        <p>Check the amount and recipient before connecting your wallet.</p>
+        <h1>{expired ? "Payment Link Expired" : "Review and pay securely."}</h1>
+        <p>{expired ? "This request can no longer accept a new payment." : "Check the request, connect your wallet, then approve the transaction."}</p>
       </div>
+      <ol className="payment-progress" aria-label="Payment progress">
+        <li data-state={reviewed || hash ? "complete" : "current"}>
+          <span>{reviewed || hash ? <Icon name="check" size={15} /> : "1"}</span>
+          <div><strong>Review</strong><small>Check payment details</small></div>
+        </li>
+        <li data-state={isConnected ? "complete" : reviewed ? "current" : "upcoming"}>
+          <span>{isConnected ? <Icon name="check" size={15} /> : "2"}</span>
+          <div><strong>Connect</strong><small>Use a browser wallet</small></div>
+        </li>
+        <li data-state={hash ? "complete" : isConnected && ready ? "current" : "upcoming"}>
+          <span>{hash ? <Icon name="check" size={15} /> : "3"}</span>
+          <div><strong>Pay</strong><small>{hash ? "Transaction submitted" : "Approve in your wallet"}</small></div>
+        </li>
+      </ol>
       <div className="pay-grid">
         <div className="payment-overview">
           <PaymentTicket {...payment} status={status}>
@@ -79,6 +94,7 @@ export function PaymentRequestView({
           <p className="testnet-note">
             Monad Testnet · Test tokens only. No real money.
           </p>
+          {payment.expiresAt && <ExpiryCountdown expiresAt={payment.expiresAt} />}
         </div>
         <div className="payment-review" id="payment-review" tabIndex={-1}>
           <PaymentSummary payment={payment} />
@@ -87,7 +103,7 @@ export function PaymentRequestView({
             aria-labelledby="payment-action-title"
           >
             <h2 id="payment-action-title">
-              {hash ? "Payment progress" : "Your approval"}
+              {hash ? "Transaction status" : isConnected && ready ? "Ready for your approval" : "Connect to continue"}
             </h2>
 
             {!stored && status === "confirmed" && hash ? (
@@ -101,7 +117,7 @@ export function PaymentRequestView({
               <div className="stack">
                 <p className="notice" role="status">
                   {stored
-                    ? "Transaction submitted. Secure server verification is not enabled yet, so this request remains pending. Donâ€™t send another payment."
+                    ? "Transaction Submitted. Awaiting Verification. Secure server verification is not enabled yet, so this request remains pending. Donâ€™t send another payment."
                     : terminalFailure
                     ? verification.error?.message
                     : "Payment submitted. We’re checking the transaction on Monad. Don’t send another payment."}
@@ -135,9 +151,20 @@ export function PaymentRequestView({
                 This request has expired. Ask the recipient for a new link.
               </p>
             ) : !isConnected || !ready ? (
-              <WalletButton primary />
+              <div className="stack connect-guidance">
+                <p className="action-guidance">
+                  {!isConnected
+                    ? "Connect a wallet to continue. Connecting does not send a transaction."
+                    : "Your wallet is connected. Switch it to Monad Testnet to continue."}
+                </p>
+                <WalletButton primary />
+                <p className="small muted">On Android, open this page inside your wallet’s built-in browser if no wallet appears.</p>
+              </div>
             ) : (
               <>
+                <p className="wallet-ready-note" role="status">
+                  <Icon name="check" size={16} /> Wallet connected on Monad Testnet. Confirm the review below to unlock payment.
+                </p>
                 <label className="review-checkbox">
                   <input
                     type="checkbox"

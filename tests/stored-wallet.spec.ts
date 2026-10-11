@@ -187,3 +187,26 @@ test("expired stored request never offers a wallet transaction", async ({ page, 
   await expect(page.getByRole("button", { name: "Pay 0.25 MON" })).toHaveCount(0);
   expect(await page.evaluate(() => sessionStorage.getItem("test-send-count"))).toBeNull();
 });
+
+test("stored expiry countdown uses the persisted timestamp across refresh", async ({ page, request }) => {
+  const expiry = new Date(Date.now() + 65_000).toISOString();
+  const payment = await createStoredPayment(request, "MON", "0.25", expiry);
+  await page.goto(`/pay/${payment.id}`);
+  const countdown = page.locator(".countdown");
+  await expect(page.getByText("Payment expires in", { exact: true })).toBeVisible();
+  await expect(countdown).toBeVisible();
+  const seconds = (label: string | null) => {
+    const values = label?.match(/\d+/g)?.map(Number) ?? [];
+    return values.length === 4
+      ? values[0] * 86_400 + values[1] * 3_600 + values[2] * 60 + values[3]
+      : 0;
+  };
+  await expect.poll(async () => seconds(await countdown.getAttribute("aria-label"))).toBeGreaterThan(0);
+  const first = await countdown.getAttribute("aria-label");
+  await page.waitForTimeout(1_200);
+  await page.reload();
+  await expect(countdown).toBeVisible();
+  await expect.poll(async () => seconds(await countdown.getAttribute("aria-label"))).toBeGreaterThan(0);
+  const second = await countdown.getAttribute("aria-label");
+  expect(seconds(second)).toBeLessThan(seconds(first));
+});

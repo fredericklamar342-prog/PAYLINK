@@ -66,7 +66,7 @@ test("landing, form, shareable request and empty receipt work without browser er
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Request a payment. Share a link.",
+      name: "Get Paid in Crypto. Just Share a Link.",
     }),
   ).toBeVisible();
   await page

@@ -11,20 +11,20 @@ export default function Home() {
             Payment requests on Monad Testnet
           </div>
           <h1>
-            Request a payment.
+            Get Paid in Crypto.
             <br />
-            Share a link.
+            Just Share a Link.
           </h1>
           <p className="hero-description">
-            For freelancers and anyone splitting a bill: put the amount, purpose,
-            and wallet address in one link. Your payer reviews it before paying.
+            Create and share crypto payment requests on Monad Testnet. Simple for
+            you, easy for your customers.
           </p>
           <div className="hero-actions">
             <Link className="button primary" href="/create">
               Create a Payment Link <Icon name="arrow" />
             </Link>
             <a className="text-link" href="#how-it-works">
-              See how it works <Icon name="arrow" size={16} />
+              How It Works <Icon name="arrow" size={16} />
             </a>
           </div>
           <div className="hero-notes">
@@ -38,7 +38,7 @@ export default function Home() {
             </span>
           </div>
           <p className="hero-testnet-note">
-            Testnet requests only. Payment collection is not enabled for new links.
+            Monad Testnet only. MON and USDC are test tokens with no real monetary value.
           </p>
         </div>
         <PaymentDemo />
@@ -49,13 +49,13 @@ export default function Home() {
         </p>
         <span><Icon name="link" /> Share a link or QR code</span>
         <span><Icon name="wallet" /> Paid directly to your wallet</span>
-        <span><Icon name="shield" /> Receipt checked onchain</span>
+        <span><Icon name="shield" /> Transaction visible on the explorer</span>
       </div>
       <section className="how-section container" id="how-it-works">
         <div className="section-heading">
           <div>
-            <span className="section-kicker">From request to receipt</span>
-            <h2>Create. Share. Get paid.</h2>
+            <span className="section-kicker">A simple payment journey</span>
+            <h2>Create. Share. Pay.</h2>
           </div>
           <p>
             A payment request your payer can review,
@@ -78,9 +78,9 @@ export default function Home() {
             ],
             [
               "03",
-              "Get paid",
-              "The payer reviews the details, connects a wallet, and confirms.",
-              "The transaction is checked onchain before a receipt is shown.",
+              "Pay",
+              "The payer reviews the details, connects a wallet, and approves.",
+              "Submitted transactions remain awaiting verification in this MVP.",
             ],
           ].map(([n, title, text, detail]) => (
             <article key={n}>
@@ -90,6 +90,25 @@ export default function Home() {
               <p className="small muted">{detail}</p>
             </article>
           ))}
+        </div>
+      </section>
+      <section className="token-section container" aria-labelledby="token-heading">
+        <div className="section-heading compact-heading">
+          <div>
+            <span className="section-kicker">Supported testnet tokens</span>
+            <h2 id="token-heading">Choose MON or USDC.</h2>
+          </div>
+          <p>Both tokens run on Monad Testnet. They are for demonstration and have no real monetary value.</p>
+        </div>
+        <div className="token-grid">
+          <article className="token-card">
+            <span className="token-mark">M</span>
+            <div><h3>MON</h3><p>Native testnet token used for payments and network fees.</p></div>
+          </article>
+          <article className="token-card">
+            <span className="token-mark token-mark-usdc">$</span>
+            <div><h3>USDC</h3><p>Testnet USDC transfer. MON is still required for the network fee.</p></div>
+          </article>
         </div>
       </section>
       <section id="security" className="security-section container">
@@ -103,8 +122,8 @@ export default function Home() {
             what you’re signing.
           </h2>
           <p>
-            Clear details before you approve. A verifiable receipt after you
-            pay. Your money goes directly from your wallet to theirs.
+            Clear details before you approve. Your wallet shows the transaction,
+            and funds move directly to the listed recipient address.
           </p>
           <ul className="trust-list">
             <li>
@@ -117,7 +136,7 @@ export default function Home() {
             </li>
             <li>
               <Icon name="check" size={17} />
-              Confirmation checked onchain
+              Submitted hashes link to the Monad explorer
             </li>
           </ul>
         </div>

@@ -12,6 +12,7 @@ import { QrPayment } from "./qr-payment";
 import { Icon } from "@/components/ui/icon";
 import { Feedback } from "@/components/ui/feedback";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { ExpirationSelector } from "./expiration-selector";
 export function PaymentForm() {
   const { address } = useConnection();
   const [draft, setDraft] = useState<PaymentDraft>({
@@ -110,7 +111,7 @@ export function PaymentForm() {
             Your link is ready.
           </h1>
           <p className="page-description">
-            Send it in a message, or let someone scan to review and submit the testnet payment.
+            Copy, share, or scan the real payment URL below. It stays available after you leave this page.
           </p>
           <QrPayment url={created.url} />
           <Link
@@ -205,7 +206,7 @@ export function PaymentForm() {
                 id="recipient"
                 required
                 className="mono"
-                placeholder="0x…"
+                placeholder="0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
                 value={draft.recipient}
                 onChange={(e) => update("recipient", e.target.value.trim())}
                 spellCheck={false}
@@ -264,7 +265,7 @@ export function PaymentForm() {
               <textarea
                 id="description"
                 required
-                placeholder="e.g. Website development"
+                placeholder="e.g. Website design payment"
                 rows={2}
                 maxLength={140}
                 value={draft.description}
@@ -281,25 +282,12 @@ export function PaymentForm() {
                 <span className="field-hint">{draft.description.length}/140</span>
               </div>
             </div>
-            <div className="field">
-              <label htmlFor="expiry">
-                Expires on <span className="optional">Optional</span>
-              </label>
-              <input
-                id="expiry"
-                type="datetime-local"
-                value={draft.expiry}
-                onChange={(e) => update("expiry", e.target.value)}
-                aria-invalid={errors.expiry ? true : undefined}
-                aria-describedby="expiry-help"
-              />
-              <p
-                id="expiry-help"
-                className={errors.expiry ? "field-error" : "field-hint"}
-              >
-                {errors.expiry || "Your local time. Leave empty for no expiry."}
-              </p>
-            </div>
+            <ExpirationSelector
+              value={draft.expiry}
+              error={errors.expiry}
+              disabled={busy}
+              onChange={(value) => update("expiry", value)}
+            />
           </fieldset>
           <Feedback message={error} />
           <button className="button primary full" disabled={busy} type="submit">
@@ -330,6 +318,12 @@ export function PaymentForm() {
             preview
             requestOnly
           >
+            <p className="preview-expiry">
+              <Icon name="clock" size={15} />
+              {draft.expiry
+                ? `Expires ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(Date.parse(draft.expiry))}`
+                : "No expiration set"}
+            </p>
             <button className="button primary full" disabled>
               Request preview <Icon name="link" />
             </button>

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | PayLink",
   },
   description:
-    "Create and share a payment request with an amount, purpose, and recipient wallet. Try direct wallet payments on Monad Testnet with test MON.",
+    "Create and share MON or USDC payment requests on Monad Testnet. Review every test-token transfer before approving it in your wallet.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

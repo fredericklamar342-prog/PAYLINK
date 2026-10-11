@@ -189,7 +189,7 @@ test("wallet switches chain, requires review, confirms and verifies receipt", as
   await page.getByRole("checkbox").check();
   await pay.click();
   await expect(
-    page.getByText("Payment verified", { exact: true }),
+    page.getByText("Verified paid", { exact: true }),
   ).toBeVisible();
   await page.getByRole("link", { name: "View verified receipt" }).click();
   await expect(
@@ -202,7 +202,7 @@ test("wallet switches chain, requires review, confirms and verifies receipt", as
   });
   await page.goto(`/pay/${payment.id}`);
   await expect(
-    page.getByText("Payment verified", { exact: true }),
+    page.getByText("Verified paid", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Pay 0.25 MON", exact: true }),
@@ -229,7 +229,7 @@ for (const mode of ["rejected", "pending", "failed", "unfinalized"] as const)
     } else {
       await expect(
         page.getByText(
-          mode === "failed" ? "Payment failed" : "Confirming onchain",
+          mode === "failed" ? "Payment failed" : "Awaiting verification",
           { exact: true },
         ),
       ).toBeVisible();

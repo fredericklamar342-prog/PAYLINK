@@ -171,7 +171,7 @@ test("concurrent API retries return one ID and recipient responses exclude inter
   expect(publicResponse.headers()["cache-control"]).toBe("no-store");
   expect((await publicResponse.json()).payment).toEqual(payment);
   await page.goto(bodies[0].path);
-  await expect(page.getByText("Review your payment.")).toBeVisible();
+  await expect(page.getByText("Review and pay securely.")).toBeVisible();
   await expect(page.locator(".payment-summary")).toContainText(draft.recipient);
   await expect(page.getByRole("main").getByRole("button", { name: "Connect Wallet" })).toBeVisible();
   await expect(page.getByText("Payment complete.")).toHaveCount(0);

@@ -51,7 +51,7 @@ export function PaymentDemo() {
         </PaymentTicket>
       </div>
       <p className="demo-caption">
-        Illustrative USDC examples. Real requests use testnet MON.
+        Illustrative USDC examples. Real requests can use testnet MON or USDC.
       </p>
       <noscript>
         <p className="demo-caption">Enable JavaScript to switch examples.</p>

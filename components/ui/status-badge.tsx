@@ -6,8 +6,8 @@ import { useFeedbackMotion } from "./use-feedback-motion";
 const labels: Record<PaymentStatus, string> = {
   unpaid: "Awaiting payment",
   signing: "Check your wallet",
-  pending: "Confirming onchain",
-  confirmed: "Payment verified",
+  pending: "Awaiting verification",
+  confirmed: "Verified paid",
   failed: "Payment failed",
   expired: "Request expired",
 };
