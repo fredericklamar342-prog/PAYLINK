@@ -1,32 +1,30 @@
 import Link from "next/link";
-import { PaymentTicket } from "@/components/payment/payment-ticket";
+import { PaymentDemo } from "@/components/payment/payment-demo";
 import { Icon } from "@/components/ui/icon";
 export default function Home() {
   return (
-    <main id="main-content">
+    <main id="main-content" className="home-page">
       <section className="hero container">
         <div className="hero-copy">
           <div className="intro-label">
             <span className="network-glyph" />
-            Simple payments. Powered by Monad.
+            Payment requests on Monad Testnet
           </div>
           <h1>
-            Payment links,
+            Request a payment.
             <br />
-            without the
-            <br />
-            crypto friction.
+            Share a link.
           </h1>
           <p className="hero-description">
-            Create a payment request, share one link, and let anyone pay you on
-            Monad.
+            For freelancers and anyone splitting a bill: put the amount, purpose,
+            and wallet address in one link. Your payer reviews it before paying.
           </p>
           <div className="hero-actions">
             <Link className="button primary" href="/create">
               Create a Payment Link <Icon name="arrow" />
             </Link>
             <a className="text-link" href="#how-it-works">
-              See how it works <span aria-hidden="true">↗</span>
+              See how it works <Icon name="arrow" size={16} />
             </a>
           </div>
           <div className="hero-notes">
@@ -39,54 +37,29 @@ export default function Home() {
               Funds go straight to you
             </span>
           </div>
+          <p className="hero-testnet-note">
+            Testnet requests only. Payment collection is not enabled for new links.
+          </p>
         </div>
-        <div className="hero-ticket-stage">
-          <div className="ticket-stage-label">
-            <span>A little link. A complete payment.</span>
-            <span aria-hidden="true">↓</span>
-          </div>
-          <PaymentTicket
-            amount="5"
-            token="USDC"
-            recipientName="Frederick Lamar"
-            recipient="0x84f20000000000000000000000000000000092ac"
-            description="Website development"
-            preview
-          >
-            <Link href="/create" className="button primary full">
-              Pay 5 USDC <Icon name="arrow" />
-            </Link>
-          </PaymentTicket>
-          <div className="preview-caption">
-            <span className="preview-pill">Preview</span>USDC example · Live
-            requests use testnet MON
-          </div>
-        </div>
+        <PaymentDemo />
       </section>
       <div className="value-strip container">
         <p>
-          Made for the moment
-          <br />
-          <strong>someone says “send me a link.”</strong>
+          From your request<br /><strong>to their wallet.</strong>
         </p>
-        <span>Freelance work</span>
-        <span>Shared expenses</span>
-        <span>Everyday payments</span>
+        <span><Icon name="link" /> Share a link or QR code</span>
+        <span><Icon name="wallet" /> Paid directly to your wallet</span>
+        <span><Icon name="shield" /> Receipt checked onchain</span>
       </div>
       <section className="how-section container" id="how-it-works">
         <div className="section-heading">
           <div>
             <span className="section-kicker">From request to receipt</span>
-            <h2>
-              Three steps. One less thing
-              <br />
-              to think about.
-            </h2>
+            <h2>Create. Share. Get paid.</h2>
           </div>
           <p>
-            No payment instructions to explain.
-            <br />
-            Just a link that takes care of it.
+            A payment request your payer can review,
+            from the first detail to the final receipt.
           </p>
         </div>
         <div className="steps">
@@ -95,7 +68,7 @@ export default function Home() {
               "01",
               "Create",
               "Set the amount and payment details.",
-              "A clear request, with everything in one place.",
+              "Add the recipient wallet, purpose, and an optional expiry.",
             ],
             [
               "02",
@@ -107,7 +80,7 @@ export default function Home() {
               "03",
               "Get paid",
               "The payer reviews the details, connects a wallet, and confirms.",
-              "A verified receipt closes the loop.",
+              "The transaction is checked onchain before a receipt is shown.",
             ],
           ].map(([n, title, text, detail]) => (
             <article key={n}>
@@ -150,7 +123,7 @@ export default function Home() {
         </div>
         <div className="review-example">
           <div className="row-between">
-            <h3>Nothing hidden. Just the details.</h3>
+            <h3>Before you approve</h3>
             <Icon name="shield" />
           </div>
           <dl className="details-list">
@@ -164,7 +137,7 @@ export default function Home() {
             </div>
             <div>
               <dt>Network</dt>
-              <dd>Monad</dd>
+              <dd>Monad Testnet</dd>
             </div>
             <div>
               <dt>Payment purpose</dt>
@@ -172,21 +145,20 @@ export default function Home() {
             </div>
           </dl>
           <p className="review-sentence">
-            You are paying <strong>5 USDC</strong> on <strong>Monad</strong> to{" "}
+            Example: <strong>5 USDC</strong> on <strong>Monad Testnet</strong> to{" "}
             <span className="mono">0x84F2…92AC</span>.
           </p>
           <p className="small muted">
-            Illustrative review. Your wallet shows the final network fee.
+            USDC illustration only. Your wallet shows the final network fee.
           </p>
         </div>
       </section>
       <section className="closing-section container">
         <div>
           <h2>
-            Good work deserves
-            <br />a simple way to get paid.
+            Your next payment starts with a link.
           </h2>
-          <p>Make your first payment link in a moment.</p>
+          <p>Set the details. Share the request. No account needed.</p>
         </div>
         <Link href="/create" className="button primary">
           Create a Payment Link <Icon name="arrow" />

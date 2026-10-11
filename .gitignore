@@ -17,6 +17,7 @@
 
 # next.js
 /.next/
+/.next-test/
 /out/
 
 # production
@@ -25,6 +26,12 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+*.crt
+/.next-profiles/
+/trace-turbopack.bin
 
 # debug
 npm-debug.log*
@@ -34,6 +41,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+env.local
+!.env.example
 
 # vercel
 .vercel

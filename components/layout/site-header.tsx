@@ -1,15 +1,15 @@
 import { PayLinkLogo } from "@/components/branding/logo";
 import { WalletButton } from "@/components/wallet/wallet-button";
-import Link from "next/link";
+import { Suspense } from "react";
+import { NavigationLinks, SiteNavigation } from "./site-navigation";
 export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container header-inner">
         <PayLinkLogo />
-        <nav aria-label="Main navigation">
-          <Link href="/#how-it-works">How it works</Link>
-          <Link href="/#security">Security</Link>
-        </nav>
+        <Suspense fallback={<NavigationLinks />}>
+          <SiteNavigation />
+        </Suspense>
         <WalletButton />
       </div>
     </header>

@@ -1,10 +1,11 @@
 import type { PaymentRequest } from "@/lib/types";
 import { paymentChain } from "@/lib/chain";
 import { CopyButton } from "@/components/ui/copy-button";
-export function PaymentSummary({ payment }: { payment: PaymentRequest }) {
+import { PAYMENT_TOKENS } from "@/lib/tokens";
+export function PaymentSummary({ payment, viewOnly = false }: { payment: PaymentRequest; viewOnly?: boolean }) {
   return (
     <section className="payment-summary">
-      <h2>Know before you pay.</h2>
+      <h2>{viewOnly ? "Request details" : "Know before you pay."}</h2>
       <dl className="details-list">
         <div>
           <dt>Amount</dt>
@@ -27,9 +28,14 @@ export function PaymentSummary({ payment }: { payment: PaymentRequest }) {
             <CopyButton value={payment.recipient} label="Copy address" />
           </dd>
         </div>
+        {payment.token === "USDC" && <div className="address-detail">
+          <dt>USDC contract</dt>
+          <dd><span className="address">{PAYMENT_TOKENS.USDC.address}</span>
+            <CopyButton value={PAYMENT_TOKENS.USDC.address} label="Copy token contract" /></dd>
+        </div>}
         <div>
           <dt>Network fee</dt>
-          <dd>Shown in your wallet</dd>
+          <dd>{viewOnly ? "None to create or view this request" : "Shown in your wallet"}</dd>
         </div>
         {payment.expiresAt && (
           <div>
@@ -45,7 +51,7 @@ export function PaymentSummary({ payment }: { payment: PaymentRequest }) {
         )}
       </dl>
       <p className="review-sentence">
-        You are paying{" "}
+        {viewOnly ? "This request is for" : "You are paying"}{" "}
         <strong>
           {payment.amount} {payment.token}
         </strong>{" "}

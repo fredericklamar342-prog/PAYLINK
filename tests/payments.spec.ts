@@ -66,7 +66,7 @@ test("landing, form, shareable request and empty receipt work without browser er
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Payment links, without the crypto friction.",
+      name: "Request a payment. Share a link.",
     }),
   ).toBeVisible();
   await page
@@ -129,8 +129,8 @@ test("landing, form, shareable request and empty receipt work without browser er
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
-test("mobile and tablet layouts fit the viewport", async ({ page }) => {
-  for (const width of [375, 667, 820, 1440]) {
+for (const width of [320, 375, 667, 820, 1440, 1920]) {
+  test(`layouts fit the ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 667 ? 375 : 900 });
     for (const path of [
       "/",
@@ -146,19 +146,15 @@ test("mobile and tablet layouts fit the viewport", async ({ page }) => {
         ),
       ).toBe(true);
     }
-  }
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
-  await page.screenshot({
-    path: "test-results/landing-desktop.png",
-    fullPage: true,
+    if (width === 1440 || width === 375) {
+      await page.goto("/");
+      await page.screenshot({
+        path: `test-results/landing-${width === 1440 ? "desktop" : "mobile"}.png`,
+        fullPage: true,
+      });
+    }
   });
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.screenshot({
-    path: "test-results/landing-mobile.png",
-    fullPage: true,
-  });
-});
+}
 test("expired request blocks payment", async ({ page }) => {
   const payment = createPayment({
     ...draft,
@@ -169,6 +165,8 @@ test("expired request blocks payment", async ({ page }) => {
     timeout: 10_000,
   });
   await expect(
-    page.getByRole("article").getByRole("button", { name: "Connect Wallet" }),
+    page
+      .getByRole("region", { name: "Your approval" })
+      .getByRole("button", { name: "Connect Wallet" }),
   ).toHaveCount(0);
 });

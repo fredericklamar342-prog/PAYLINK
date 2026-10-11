@@ -9,6 +9,8 @@ import type { PaymentRequest, PaymentStatus } from "@/lib/types";
 import { VerificationError } from "@/lib/transactions";
 import { WalletButton } from "@/components/wallet/wallet-button";
 import { Icon } from "@/components/ui/icon";
+import { Feedback } from "@/components/ui/feedback";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { PaymentTicket } from "./payment-ticket";
 import { PaymentSummary } from "./payment-summary";
 import { QrPayment } from "./qr-payment";
@@ -32,7 +34,13 @@ export function PaymentPage({ id }: { id: string }) {
     );
   return <PaymentRequestView key={id} payment={payment} />;
 }
-function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
+export function PaymentRequestView({
+  payment,
+  stored = false,
+}: {
+  payment: PaymentRequest;
+  stored?: boolean;
+}) {
   const { isConnected } = useConnection();
   const browserReady = useBrowserReady();
   const now = useClock();
@@ -40,8 +48,8 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
   const { hash, signing, error, pay, verification, ready } =
     usePayment(payment);
   const [reviewed, setReviewed] = useState(false);
-  const terminalFailure = verification.error instanceof VerificationError;
-  const status: PaymentStatus = verification.data
+  const terminalFailure = !stored && verification.error instanceof VerificationError;
+  const status: PaymentStatus = !stored && verification.data
     ? "confirmed"
     : terminalFailure
       ? "failed"
@@ -56,15 +64,33 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
     <>
       <div className="payment-page-heading">
         <span className="section-kicker">
-          A clear request. A confident payment.
+          Payment request
         </span>
-        <h1>You’re in the right place.</h1>
-        <p>Review the details. Your wallet takes it from here.</p>
+        <h1>Review your payment.</h1>
+        <p>Check the amount and recipient before connecting your wallet.</p>
       </div>
       <div className="pay-grid">
-        <div>
+        <div className="payment-overview">
           <PaymentTicket {...payment} status={status}>
-            {status === "confirmed" && hash ? (
+            <a className="text-link full review-link" href="#payment-review">
+              Review payment details <Icon name="arrow" size={17} />
+            </a>
+          </PaymentTicket>
+          <p className="testnet-note">
+            Monad Testnet · Test tokens only. No real money.
+          </p>
+        </div>
+        <div className="payment-review" id="payment-review" tabIndex={-1}>
+          <PaymentSummary payment={payment} />
+          <section
+            className="payment-actions"
+            aria-labelledby="payment-action-title"
+          >
+            <h2 id="payment-action-title">
+              {hash ? "Payment progress" : "Your approval"}
+            </h2>
+
+            {!stored && status === "confirmed" && hash ? (
               <Link
                 className="button primary full"
                 href={receiptPath(payment.id, hash)}
@@ -74,7 +100,9 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
             ) : hash ? (
               <div className="stack">
                 <p className="notice" role="status">
-                  {terminalFailure
+                  {stored
+                    ? "Transaction submitted. Secure server verification is not enabled yet, so this request remains pending. Donâ€™t send another payment."
+                    : terminalFailure
                     ? verification.error?.message
                     : "Payment submitted. We’re checking the transaction on Monad. Don’t send another payment."}
                 </p>
@@ -86,7 +114,7 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
                 >
                   View transaction <Icon name="external" size={16} />
                 </a>
-                {verification.isError && !terminalFailure && (
+                {!stored && verification.isError && !terminalFailure && (
                   <>
                     <p className="small muted">
                       Confirmation is taking longer than expected. Your payment
@@ -130,7 +158,7 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
                   {signing
                     ? "Check your wallet…"
                     : `Pay ${payment.amount} ${payment.token}`}
-                  <Icon name="arrow" />
+                  {signing ? <LoadingIndicator /> : <Icon name="arrow" />}
                 </button>
                 <p className="small muted">
                   Next, your wallet asks you to sign. A network fee is added.
@@ -138,27 +166,23 @@ function PaymentRequestView({ payment }: { payment: PaymentRequest }) {
                 </p>
               </>
             )}
-            {error && (
-              <p className="notice error" role="alert">
-                {error}
-              </p>
-            )}
-          </PaymentTicket>
-          <p className="testnet-note">
-            Monad Testnet · Test tokens only. No real money.
-          </p>
-          <details className="share-details">
-            <summary>Share this request / QR code</summary>
-            {browserReady && (
-              <QrPayment url={`${window.location.origin}/pay/${payment.id}`} />
-            )}
-          </details>
+            <Feedback message={error} />
+          </section>
         </div>
-        <PaymentSummary payment={payment} />
+        <details className="payment-sharing share-details">
+          <summary>
+            <span>Share this request / QR code</span>
+            <Icon name="chevron" size={18} />
+          </summary>
+          {browserReady && (
+            <QrPayment url={`${window.location.origin}/pay/${payment.id}`} />
+          )}
+        </details>
       </div>
       <p className="payment-limit-note">
-        Already paid from another device? Check with the recipient before paying
-        again. This MVP does not track payment status across devices.
+        {stored
+          ? "A submitted transaction does not mark this request paid. PayLink will do that only after independent server verification is enabled."
+          : "Already paid from another device? Check with the recipient before paying again. This MVP does not track payment status across devices."}
       </p>
     </>
   );

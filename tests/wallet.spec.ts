@@ -13,7 +13,7 @@ const draft = {
   description: "Brand identity",
   expiry: "",
 };
-type Mode = "success" | "rejected" | "pending" | "failed" | "mismatch";
+type Mode = "success" | "rejected" | "pending" | "failed" | "mismatch" | "unfinalized" | "reorg";
 
 async function setup(page: Page, mode: Mode = "success", wrongChain = false) {
   const payment = createPayment(draft);
@@ -76,7 +76,7 @@ async function setup(page: Page, mode: Mode = "success", wrongChain = false) {
   );
   await page.route("https://testnet-rpc.monad.xyz/**", async (route) => {
     const body = route.request().postDataJSON();
-    function respond(request: { id: number; method: string }) {
+    function respond(request: { id: number; method: string; params?: unknown[] }) {
       let result: unknown;
       switch (request.method) {
         case "eth_chainId":
@@ -133,9 +133,10 @@ async function setup(page: Page, mode: Mode = "success", wrongChain = false) {
                 };
           break;
         case "eth_getBlockByHash":
+        case "eth_getBlockByNumber":
           result = {
-            hash: blockHash,
-            number: "0x1",
+            hash: mode === "reorg" ? `0x${"ef".repeat(32)}` : blockHash,
+            number: mode === "unfinalized" && request.params?.[0] === "finalized" ? "0x0" : "0x1",
             timestamp: "0x68e00000",
             transactions: [],
             gasLimit: "0x100000",
@@ -211,7 +212,7 @@ test("wallet switches chain, requires review, confirms and verifies receipt", as
   ).toBe("1");
   expect(errors).toEqual([]);
 });
-for (const mode of ["rejected", "pending", "failed"] as const)
+for (const mode of ["rejected", "pending", "failed", "unfinalized"] as const)
   test(`payment handles ${mode}`, async ({ page }) => {
     const payment = await setup(page, mode);
     await page.goto(`/pay/${payment.id}`);
@@ -251,4 +252,11 @@ test("receipt rejects a transaction sent to a different recipient", async ({
   await expect(
     page.getByText("This transaction does not match this payment request."),
   ).toBeVisible();
+});
+
+test("receipt rejects a transaction outside canonical history", async ({ page }) => {
+  const payment = await setup(page, "reorg");
+  await page.goto(receiptPath(payment.id, txHash));
+  await expect(page.getByRole("heading", { name: "Payment not verified." })).toBeVisible();
+  await expect(page.getByText("This transaction does not match the canonical network history.")).toBeVisible();
 });

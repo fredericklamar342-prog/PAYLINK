@@ -1,9 +1,11 @@
 "use client";
 import { QRCodeSVG } from "qrcode.react";
 import { CopyButton } from "@/components/ui/copy-button";
-import { useState } from "react";
-export function QrPayment({ url }: { url: string }) {
+import { useId, useState } from "react";
+import { Feedback } from "@/components/ui/feedback";
+export function QrPayment({ url, viewOnly = false }: { url: string; viewOnly?: boolean }) {
   const [feedback, setFeedback] = useState("");
+  const urlId = useId();
   async function share() {
     try {
       if (navigator.share)
@@ -20,7 +22,7 @@ export function QrPayment({ url }: { url: string }) {
   return (
     <section className="qr-panel" aria-label="Share payment request">
       <div>
-        <h3>Scan to pay</h3>
+        <h3>{viewOnly ? "Scan to view request" : "Scan to pay"}</h3>
         <p className="small muted">One link. Any screen.</p>
       </div>
       <div className="qr-code">
@@ -32,11 +34,11 @@ export function QrPayment({ url }: { url: string }) {
           title="Scan to open this PayLink payment request"
         />
       </div>
-      <label className="field-label" htmlFor="payment-url">
+      <label className="field-label" htmlFor={urlId}>
         Payment URL
       </label>
       <textarea
-        id="payment-url"
+        id={urlId}
         className="share-url mono"
         value={url}
         readOnly
@@ -49,9 +51,7 @@ export function QrPayment({ url }: { url: string }) {
           Share link
         </button>
       </div>
-      <p role="status" className="small muted">
-        {feedback}
-      </p>
+      <Feedback message={feedback} tone="neutral" />
     </section>
   );
 }

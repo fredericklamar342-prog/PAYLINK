@@ -26,6 +26,8 @@ export interface TransactionReceipt {
   status: "confirmed";
 }
 export interface PaymentDraft {
+  // Omitted only by the legacy MON portable-link helpers.
+  token?: TokenSymbol;
   amount: string;
   recipient: string;
   recipientName: string;

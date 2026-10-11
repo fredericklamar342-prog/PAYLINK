@@ -13,6 +13,7 @@ export interface TicketProps {
   preview?: boolean;
   status?: PaymentStatus;
   children?: ReactNode;
+  requestOnly?: boolean;
 }
 export function PaymentTicket({
   amount,
@@ -23,6 +24,7 @@ export function PaymentTicket({
   preview,
   status = "unpaid",
   children,
+  requestOnly = false,
 }: TicketProps) {
   return (
     <article
@@ -42,7 +44,7 @@ export function PaymentTicket({
               ? recipientName
                   .trim()
                   .split(/\s+/)
-                  .map((s) => s[0])
+                  .map((s) => Array.from(s)[0])
                   .slice(0, 2)
                   .join("")
                   .toUpperCase()
@@ -59,7 +61,10 @@ export function PaymentTicket({
         <p className="ticket-description">
           {description || "What’s this payment for?"}
         </p>
-        <div className="ticket-amount">
+        <div
+          className="ticket-amount"
+          data-long={displayAmount(amount).length > 14}
+        >
           {displayAmount(amount)} <span>{token}</span>
         </div>
         <div className="ticket-meta">
@@ -84,7 +89,9 @@ export function PaymentTicket({
         {children}
         <p className="ticket-assurance">
           <Icon name="shield" size={15} />
-          {preview
+          {requestOnly
+            ? "Request only. No payment collected."
+            : preview
             ? "You review. You approve. You pay."
             : "Your wallet. Your approval. Always."}
         </p>

@@ -2,12 +2,15 @@ import { parseUnits, type Hash } from "viem";
 import { publicClient, paymentChain } from "./chain";
 import { paymentReference } from "./payments";
 import type { PaymentRequest, TransactionReceipt } from "./types";
+import { isStoredPaymentId } from "./stored-payments";
 
 export class VerificationError extends Error {}
 export async function verifyPayment(
   payment: PaymentRequest,
   hash: Hash,
 ): Promise<TransactionReceipt> {
+  if (payment.token !== "MON" || payment.network !== paymentChain.id || isStoredPaymentId(payment.id))
+    throw new VerificationError("Payment collection is not enabled for this request.");
   const [transaction, receipt] = await Promise.all([
     publicClient.getTransaction({ hash }),
     publicClient.getTransactionReceipt({ hash }),
@@ -18,6 +21,8 @@ export async function verifyPayment(
     );
   if (
     transaction.chainId !== paymentChain.id ||
+    transaction.hash !== hash || receipt.transactionHash !== hash ||
+    transaction.blockHash !== receipt.blockHash || transaction.blockNumber !== receipt.blockNumber ||
     transaction.to?.toLowerCase() !== payment.recipient.toLowerCase() ||
     transaction.value !== parseUnits(payment.amount, 18) ||
     transaction.input !== paymentReference(payment.id)
@@ -25,7 +30,16 @@ export async function verifyPayment(
     throw new VerificationError(
       "This transaction does not match this payment request.",
     );
-  const block = await publicClient.getBlock({ blockHash: receipt.blockHash });
+  const [block, finalized, chainId] = await Promise.all([
+    publicClient.getBlock({ blockNumber: receipt.blockNumber }),
+    publicClient.getBlock({ blockTag: "finalized" }),
+    publicClient.getChainId(),
+  ]);
+  if (chainId !== paymentChain.id || block.hash !== receipt.blockHash)
+    throw new VerificationError("This transaction does not match the canonical network history.");
+  // An ordinary Error keeps the existing confirmation polling active. Never equate inclusion with finality.
+  if (finalized.number === null || finalized.number < receipt.blockNumber)
+    throw new Error("Waiting for finalized on-chain confirmation.");
   return {
     transactionHash: hash,
     sender: transaction.from,

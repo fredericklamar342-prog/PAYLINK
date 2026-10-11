@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "PayLink — Payments, with less friction",
+    default: "PayLink | Payment links on Monad Testnet",
     template: "%s | PayLink",
   },
   description:
-    "Create a payment request, share one link, and pay with confidence on Monad.",
+    "Create and share a payment request with an amount, purpose, and recipient wallet. Try direct wallet payments on Monad Testnet with test MON.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

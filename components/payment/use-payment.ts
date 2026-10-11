@@ -2,9 +2,9 @@
 import { useRef, useState } from "react";
 import { useConnection, useWalletClient } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { parseUnits, type Hash } from "viem";
+import { erc20Abi, type Hash } from "viem";
 import { paymentChain, publicClient } from "@/lib/chain";
-import { isExpired, paymentReference } from "@/lib/payments";
+import { isExpired } from "@/lib/payments";
 import {
   readPaymentHash,
   savePaymentHash,
@@ -16,6 +16,9 @@ import {
   walletError,
 } from "@/lib/transactions";
 import type { PaymentRequest } from "@/lib/types";
+import { isStoredPaymentId } from "@/lib/stored-payments";
+import { PAYMENT_TOKENS } from "@/lib/tokens";
+import { buildPaymentTransfer } from "@/lib/payment-transfer";
 
 export function useVerifiedReceipt(
   payment: PaymentRequest | null,
@@ -38,7 +41,11 @@ export function usePayment(payment: PaymentRequest) {
   const storedHash = usePaymentHash(payment.id);
   const [memoryHash, setMemoryHash] = useState<Hash>();
   const hash = memoryHash || storedHash;
-  const verification = useVerifiedReceipt(payment, hash);
+  const stored = isStoredPaymentId(payment.id);
+  const verification = useVerifiedReceipt(
+    stored ? null : payment,
+    stored ? undefined : hash,
+  );
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState("");
   const inFlight = useRef(false);
@@ -48,6 +55,8 @@ export function usePayment(payment: PaymentRequest) {
     setError("");
     setSigning(true);
     try {
+      if (payment.network !== paymentChain.id)
+        throw new Error("This payment request uses an unsupported network.");
       if (!navigator.locks)
         throw new Error(
           "Secure browser storage is required. Open this page over HTTPS or localhost.",
@@ -76,21 +85,32 @@ export function usePayment(payment: PaymentRequest) {
           // Check persistence before signing; keep a returned hash in memory even if storage later fails.
           localStorage.setItem("paylink:storage-check", "ok");
           localStorage.removeItem("paylink:storage-check");
-          const value = parseUnits(payment.amount, 18);
-          const data = paymentReference(payment.id);
-          const [gas, gasPrice, balance] = await Promise.all([
-            publicClient.estimateGas({
-              account: address,
-              to: payment.recipient,
-              value,
-              data,
-            }),
+          const transfer = buildPaymentTransfer(payment);
+          const [gasPrice, balance, tokenBalance] = await Promise.all([
             publicClient.getGasPrice(),
             publicClient.getBalance({ address }),
+            payment.token === "USDC"
+              ? publicClient.readContract({
+                  address: PAYMENT_TOKENS.USDC.address,
+                  abi: erc20Abi,
+                  functionName: "balanceOf",
+                  args: [address],
+                })
+              : Promise.resolve(undefined),
           ]);
-          if (balance < value + gas * gasPrice)
+          if (tokenBalance !== undefined && tokenBalance < transfer.amountAtomic)
+            throw new Error("Not enough testnet USDC for this payment.");
+          const gas = await publicClient.estimateGas({
+            account: address,
+            to: transfer.to,
+            value: transfer.value,
+            data: transfer.data,
+          });
+          if (balance < transfer.value + gas * gasPrice)
             throw new Error(
-              "Not enough testnet MON. Leave a little extra for the network fee.",
+              payment.token === "MON"
+                ? "Not enough testnet MON. Leave a little extra for the network fee."
+                : "Not enough testnet MON for the network fee.",
             );
           if (isExpired(payment))
             throw new Error(
@@ -99,9 +119,9 @@ export function usePayment(payment: PaymentRequest) {
           const nextHash = await wallet.sendTransaction({
             account: address,
             chain: paymentChain,
-            to: payment.recipient,
-            value,
-            data,
+            to: transfer.to,
+            value: transfer.value,
+            data: transfer.data,
           });
           setMemoryHash(nextHash);
           try {
@@ -116,7 +136,7 @@ export function usePayment(payment: PaymentRequest) {
     } catch (e) {
       const message = e instanceof Error ? e.message : "";
       setError(
-        /expired|already has|Secure browser|Not enough/.test(message)
+        /expired|already has|Secure browser|Not enough|unsupported/.test(message)
           ? message
           : walletError(e),
       );

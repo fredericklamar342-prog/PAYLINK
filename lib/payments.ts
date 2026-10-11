@@ -8,6 +8,7 @@ import {
   zeroAddress,
 } from "viem";
 import { paymentChain } from "./chain";
+import { isPaymentToken, PAYMENT_TOKENS } from "./tokens";
 import type { PaymentDraft, PaymentRequest } from "./types";
 
 export function shortAddress(address: string) {
@@ -20,15 +21,19 @@ export function displayAmount(amount: string) {
   const [whole, decimal = ""] = amount.split(".");
   return `${whole}.${decimal.padEnd(2, "0")}`;
 }
-export function validAmount(amount: string) {
-  if (!/^(0|[1-9]\d{0,8})(\.\d{1,18})?$/.test(amount)) return false;
-  return parseUnits(amount, 18) > BigInt(0);
+export function validAmount(amount: string, token: unknown = "MON") {
+  if (!isPaymentToken(token)) return false;
+  const decimals = PAYMENT_TOKENS[token].decimals;
+  if (!new RegExp(`^(0|[1-9]\\d{0,8})(\\.\\d{1,${decimals}})?$`).test(amount)) return false;
+  return parseUnits(amount, decimals) > BigInt(0);
 }
 export function validateDraft(draft: PaymentDraft, now = Date.now()) {
   const errors: Partial<Record<keyof PaymentDraft, string>> = {};
-  if (!validAmount(draft.amount))
+  const token = draft.token ?? "MON";
+  if (!isPaymentToken(token)) errors.token = "Choose MON or USDC on Monad Testnet.";
+  if (!validAmount(draft.amount, token))
     errors.amount =
-      "Enter an amount greater than zero, with up to 18 decimal places.";
+      `Enter an amount greater than zero, with up to ${token === "USDC" ? 6 : 18} decimal places.`;
   if (
     !isAddress(draft.recipient) ||
     draft.recipient.toLowerCase() === zeroAddress
@@ -50,6 +55,8 @@ export function validateDraft(draft: PaymentDraft, now = Date.now()) {
 
 // Versioned, self-contained URL payload. Public, unsigned request data, not proof of identity.
 export function createPayment(draft: PaymentDraft): PaymentRequest {
+  if (draft.token && draft.token !== "MON")
+    throw new Error("USDC requests must be saved through the payment API.");
   if (Object.keys(validateDraft(draft)).length)
     throw new Error("Check the payment details.");
   const payload = {

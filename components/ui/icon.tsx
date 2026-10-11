@@ -2,10 +2,33 @@ export function Icon({
   name,
   size = 20,
 }: {
-  name: "arrow" | "link" | "shield" | "check" | "copy" | "wallet" | "external";
+  name:
+    | "arrow"
+    | "link"
+    | "shield"
+    | "check"
+    | "copy"
+    | "wallet"
+    | "external"
+    | "clock"
+    | "warning"
+    | "chevron";
   size?: number;
 }) {
   const paths = {
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+    warning: (
+      <>
+        <path d="M12 3 2 21h20L12 3Z" />
+        <path d="M12 9v5m0 3v.1" />
+      </>
+    ),
+    chevron: <path d="m6 9 6 6 6-6" />,
     arrow: (
       <>
         <path d="M4 12h15M13 6l6 6-6 6" />
@@ -56,6 +79,7 @@ export function Icon({
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      data-icon={name}
     >
       {paths[name]}
     </svg>

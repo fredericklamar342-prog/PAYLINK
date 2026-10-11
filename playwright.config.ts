@@ -5,12 +5,12 @@ export default defineConfig({
   workers: 1,
   timeout: 180_000,
   expect: { timeout: 15_000 },
-  use: { baseURL: "http://127.0.0.1:3000", trace: "retain-on-failure" },
+  use: { baseURL: "http://127.0.0.1:3100", trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    command: "node tests/support/start-test-app.mjs --production",
+    url: "http://127.0.0.1:3100",
+    reuseExistingServer: false,
+    timeout: 300_000,
   },
 });

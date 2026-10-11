@@ -1,5 +1,7 @@
 "use client";
-import { useRef, useState } from "react";
+import { useId, useState } from "react";
+import { useAnimate } from "motion/react-mini";
+import { useReducedMotion } from "motion/react";
 import {
   useConnection,
   useConnect,
@@ -12,6 +14,9 @@ import { shortAddress } from "@/lib/payments";
 import { walletError } from "@/lib/transactions";
 import { Icon } from "@/components/ui/icon";
 import { CopyButton } from "@/components/ui/copy-button";
+import { Feedback } from "@/components/ui/feedback";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { feedbackMotion } from "@/components/ui/use-feedback-motion";
 
 export function WalletButton({ primary = false }: { primary?: boolean }) {
   const { address, chainId, isConnected, isConnecting, isReconnecting } =
@@ -20,7 +25,10 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
   const connectors = useConnectors();
   const disconnect = useDisconnect();
   const switchChain = useSwitchChain();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [dialog, animate] = useAnimate<HTMLDialogElement>();
+  const reducedMotion = useReducedMotion();
+  const titleId = useId();
+  const descriptionId = useId();
   const [error, setError] = useState("");
   const busy =
     connect.isPending ||
@@ -32,13 +40,23 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
     <>
       <button
         className={`button ${primary ? "primary full" : "secondary compact"}`}
+        aria-haspopup="dialog"
         disabled={busy}
         onClick={() => {
           setError("");
           dialog.current?.showModal();
+          if (dialog.current && !reducedMotion)
+            void animate(
+              dialog.current,
+              {
+                opacity: [0.8, 1],
+                transform: ["translateY(6px)", "translateY(0px)"],
+              },
+              feedbackMotion,
+            );
         }}
       >
-        <Icon name="wallet" size={17} />
+        {busy ? <LoadingIndicator /> : <Icon name="wallet" size={17} />}
         {busy
           ? "Connecting…"
           : wrongChain
@@ -50,13 +68,14 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
       <dialog
         ref={dialog}
         className="wallet-dialog"
-        aria-labelledby="wallet-title"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
         onClick={(e) => {
           if (e.target === dialog.current) dialog.current.close();
         }}
       >
         <div className="dialog-heading">
-          <h2 id="wallet-title">
+          <h2 id={titleId}>
             {isConnected ? "Your wallet" : "Connect your wallet"}
           </h2>
           <button
@@ -67,7 +86,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
             ×
           </button>
         </div>
-        <p className="muted">
+        <p className="muted" id={descriptionId}>
           {isConnected
             ? "You stay in control of every payment."
             : "Choose a browser wallet. Connecting never moves your funds."}
@@ -94,6 +113,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
                   }
                 }}
               >
+                {switchChain.isPending && <LoadingIndicator />}
                 {switchChain.isPending
                   ? "Switching…"
                   : "Switch to Monad Testnet"}
@@ -132,7 +152,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
                   }
                 }}
               >
-                <Icon name="wallet" />
+                {busy ? <LoadingIndicator /> : <Icon name="wallet" />}
                 {busy
                   ? "Check your wallet…"
                   : connector.name === "Injected"
@@ -146,11 +166,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
             </p>
           </div>
         )}
-        {error && (
-          <p className="notice error" role="alert">
-            {error}
-          </p>
-        )}
+        <Feedback message={error} />
       </dialog>
     </>
   );

@@ -11,6 +11,8 @@ import { PayLinkLogo } from "@/components/branding/logo";
 import { Icon } from "@/components/ui/icon";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CopyButton } from "@/components/ui/copy-button";
+import { Feedback } from "@/components/ui/feedback";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 export function ReceiptPage() {
   const params = useSearchParams();
   const payment = decodePayment(params.get("request") || "");
@@ -39,7 +41,13 @@ export function ReceiptPage() {
   if (!verification.data)
     return (
       <div className="empty-state">
-        <Icon name="shield" size={32} />
+        <span className="verification-symbol">
+          {verification.isFetching ? (
+            <LoadingIndicator />
+          ) : (
+            <Icon name="shield" size={28} />
+          )}
+        </span>
         <h1>
           {verification.error instanceof VerificationError
             ? "Payment not verified."
@@ -100,14 +108,17 @@ export function ReceiptPage() {
           <Icon name="check" size={26} />
         </span>
         <h1>Payment complete.</h1>
-        <p>One less thing to think about.</p>
+        <p>Your transfer has been verified on Monad Testnet.</p>
       </div>
       <article className="receipt-paper">
         <div className="row-between">
           <PayLinkLogo />
           <StatusBadge status="confirmed" />
         </div>
-        <div className="receipt-amount">
+        <div
+          className="receipt-amount"
+          data-long={displayAmount(receipt.amount).length > 14}
+        >
           {displayAmount(receipt.amount)} <span>{receipt.token}</span>
         </div>
         <p className="receipt-purpose">{payment.description}</p>
@@ -174,9 +185,7 @@ export function ReceiptPage() {
           Print receipt
         </button>
       </div>
-      <p role="status" className="center small">
-        {feedback}
-      </p>
+      <Feedback message={feedback} tone="neutral" />
       <Link href="/create" className="text-link receipt-create">
         Create your own Payment Link <Icon name="arrow" size={17} />
       </Link>
