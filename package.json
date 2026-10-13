@@ -12,7 +12,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:unit": "playwright test --config playwright.unit.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

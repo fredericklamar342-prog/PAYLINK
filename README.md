@@ -111,6 +111,14 @@ Seven project-specific skills live in `.agents/skills/`: `ui-ux-design`, `motion
 
 ## Next engineering priorities
 
+The stored-settlement signing foundation is implemented in `lib/settlement-proof.ts`:
+an exact EIP-712 schema, validated deployment/origin binding, integer token amounts,
+and EOA signer recovery against an independently determined chain payer. Run
+`npm run test:unit` for local signature and replay-rejection tests without a server,
+wallet, RPC, or database. This module does not establish payment or enable settlement:
+the finalized-chain verifier, historical EOA checks, rate-limited API, restricted
+database executor, and wallet proof flow remain to be implemented and integrated.
+
 Dependency audit: npm currently reports five high-severity entries in the existing development-only ESLint dependency chain (`braces` → `micromatch` → `fast-glob` → Next ESLint). npm proposes downgrading the Next ESLint configuration to 14.x; that incompatible downgrade has not been applied. Review the upstream fix before processing untrusted glob patterns. These entries are not runtime payment dependencies.
 
 1. Review and apply the proposed persistent-request schema in an isolated Supabase project, verify RLS, then consider signed requests, revocation and indexed payment status.
