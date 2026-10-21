@@ -101,9 +101,10 @@ export function PaymentRequestView({
           <section
             className="payment-actions"
             aria-labelledby="payment-action-title"
+            data-status={status}
           >
             <h2 id="payment-action-title">
-              {hash ? "Transaction status" : isConnected && ready ? "Ready for your approval" : "Connect to continue"}
+              {hash ? "Transaction status" : signing ? "Awaiting wallet approval" : isConnected && ready ? "Ready for your approval" : "Connect to continue"}
             </h2>
 
             {!stored && status === "confirmed" && hash ? (
@@ -115,9 +116,10 @@ export function PaymentRequestView({
               </Link>
             ) : hash ? (
               <div className="stack">
-                <p className="notice" role="status">
+                <p className={`notice ${terminalFailure ? "error" : ""}`} role="status">
+                  <strong>{terminalFailure ? "Transaction unsuccessful" : "Submitted. Awaiting verification."}</strong>
                   {stored
-                    ? "Transaction Submitted. Awaiting Verification. Secure server verification is not enabled yet, so this request remains pending. Donâ€™t send another payment."
+                    ? "Secure server verification is not enabled yet, so this request remains pending. Do not send another payment."
                     : terminalFailure
                     ? verification.error?.message
                     : "Payment submitted. We’re checking the transaction on Monad. Don’t send another payment."}
@@ -148,6 +150,7 @@ export function PaymentRequestView({
               </div>
             ) : expired ? (
               <p className="notice warning" role="status">
+                <strong>Payment window closed</strong>
                 This request has expired. Ask the recipient for a new link.
               </p>
             ) : !isConnected || !ready ? (

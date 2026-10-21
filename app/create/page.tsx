@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/ui/intent-link";
 import { PaymentForm } from "@/components/payment/payment-form";
 export const metadata: Metadata = { title: "Create a payment link" };
 export default function CreatePage() {

@@ -32,7 +32,7 @@ export function PaymentTicket({
       aria-label={preview ? "Payment ticket preview" : "Payment request"}
     >
       <div className="ticket-top">
-        <span className="eyebrow">Payment request</span>
+        <span className="ticket-label">Payment request</span>
         <span className="ticket-symbol" aria-hidden="true">
           ↗
         </span>

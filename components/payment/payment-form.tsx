@@ -1,18 +1,21 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useConnection } from "wagmi";
 import { validateDraft } from "@/lib/payments";
-import { creatorAccessToken } from "@/lib/supabase/browser";
 import { isStoredPaymentId } from "@/lib/stored-payments";
 import type { PaymentDraft, PaymentRequest } from "@/lib/types";
 import { isPaymentToken, PAYMENT_CHAIN_ID, PAYMENT_TOKENS } from "@/lib/tokens";
 import { PaymentTicket } from "./payment-ticket";
-import { QrPayment } from "./qr-payment";
 import { Icon } from "@/components/ui/icon";
 import { Feedback } from "@/components/ui/feedback";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { ExpirationSelector } from "./expiration-selector";
+
+const QrPayment = dynamic(() => import("./qr-payment").then((module) => module.QrPayment), {
+  loading: () => <p className="share-loading" role="status">Preparing your sharing options…</p>,
+});
 export function PaymentForm() {
   const { address } = useConnection();
   const [draft, setDraft] = useState<PaymentDraft>({
@@ -37,6 +40,10 @@ export function PaymentForm() {
   const composer = useRef<HTMLHeadingElement>(null);
   const inFlight = useRef(false);
   const submission = useRef<{ fingerprint: string; id: string } | null>(null);
+  // Focus after React commits the result, including a cold sharing-component load.
+  useEffect(() => {
+    if (created) result.current?.focus();
+  }, [created]);
   function update(key: keyof PaymentDraft, value: string) {
     if (key === "token" && !isPaymentToken(value)) return;
     setDraft((d) => ({ ...d, [key]: value }));
@@ -71,6 +78,7 @@ export function PaymentForm() {
       const fingerprint = JSON.stringify(payload);
       if (submission.current?.fingerprint !== fingerprint)
         submission.current = { fingerprint, id: crypto.randomUUID() };
+      const { creatorAccessToken } = await import("@/lib/supabase/browser");
       const token = await creatorAccessToken();
       const response = await fetch("/api/payments", {
         method: "POST",
@@ -86,7 +94,6 @@ export function PaymentForm() {
         payment,
         url: `${window.location.origin}/pay/${payment.id}`,
       });
-      requestAnimationFrame(() => result.current?.focus());
     } catch (e) {
       setError(
         e instanceof DOMException && ["TimeoutError", "AbortError"].includes(e.name)
@@ -111,11 +118,11 @@ export function PaymentForm() {
             Your link is ready.
           </h1>
           <p className="page-description">
-            Copy, share, or scan the real payment URL below. It stays available after you leave this page.
+            Send your request with a link or QR code. Your payer can review the details before approving a payment.
           </p>
           <QrPayment url={created.url} />
           <Link
-            className="button primary full"
+            className="button secondary full"
             href={`/pay/${created.payment.id}`}
           >
             Open payment page <Icon name="arrow" />
@@ -137,7 +144,7 @@ export function PaymentForm() {
           </div>
           <PaymentTicket {...created.payment}>
             <p className="small muted">
-              This request is saved. The recipient can review it and submit a testnet payment from their wallet.
+              This request is saved. Your payer can review it and submit a testnet payment from their wallet.
             </p>
           </PaymentTicket>
           <p className="small muted preview-disclaimer">
@@ -150,14 +157,19 @@ export function PaymentForm() {
   return (
     <div className="create-grid composer-grid">
       <section>
-        <span className="section-kicker">Create a request</span>
-        <h1 ref={composer} tabIndex={-1}>
+        <h1 ref={composer} tabIndex={-1} id="composer-heading">
           Your payment details.
         </h1>
         <p className="page-description">
           Set the amount and recipient. You’ll get a link and QR code to share.
         </p>
-        <form ref={form} onSubmit={submit} noValidate className="payment-form">
+        <a className="preview-jump" href="#request-preview" onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("request-preview")?.focus();
+        }}>
+          <Icon name="link" size={16} /> Preview your request <Icon name="arrow" size={16} />
+        </a>
+        <form ref={form} onSubmit={submit} noValidate className="payment-form" aria-busy={busy}>
           <fieldset className="form-section">
             <legend><span>1</span> Payment amount</legend>
             <div className="form-row">
@@ -184,11 +196,12 @@ export function PaymentForm() {
               </div>
               <div className="field token-field">
                 <label htmlFor="token">Token</label>
-                <select id="token" value={draft.token} disabled={busy}
+                <select id="token" value={draft.token} disabled={busy} aria-describedby="token-help"
                   onChange={(event) => update("token", event.target.value)}>
                   <option value="MON">MON</option>
                   <option value="USDC">USDC</option>
                 </select>
+                <p id="token-help" className="field-hint">Testnet token</p>
               </div>
             </div>
             <p className="network-notice">
@@ -290,6 +303,7 @@ export function PaymentForm() {
             />
           </fieldset>
           <Feedback message={error} />
+          <div className="create-action" data-ready={completedDetails === 3}>
           <button className="button primary full" disabled={busy} type="submit">
             {busy ? "Creating your link…" : "Create Payment Link"}
             {busy ? <LoadingIndicator /> : <Icon name="arrow" />}
@@ -298,9 +312,10 @@ export function PaymentForm() {
             <Icon name="shield" size={14} />
           No wallet signature needed. Creating a request does not collect money.
           </p>
+          </div>
         </form>
       </section>
-      <aside className="live-preview composer-preview">
+      <aside className="live-preview composer-preview" id="request-preview" tabIndex={-1} aria-label="Your payment ticket preview">
         <div className="preview-heading">
           Your payment ticket{" "}
           <span>
@@ -361,6 +376,12 @@ export function PaymentForm() {
           This preview updates as you type. Your payer reviews the full address
           and payment details before approving.
         </p>
+        <a className="preview-jump return-to-form" href="#composer-heading" onClick={(event) => {
+          event.preventDefault();
+          composer.current?.focus();
+        }}>
+          Back to payment details <Icon name="arrow" size={16} />
+        </a>
       </aside>
     </div>
   );

@@ -42,6 +42,7 @@ export function ExpirationSelector({
   const helpId = useId();
   const [selection, setSelection] = useState<string>(value ? "custom" : "none");
   const selectedPreset = PRESETS.find(({ minutes }) => String(minutes) === selection);
+  const extraPresets = PRESETS.filter(({ minutes }) => minutes !== 1_440);
 
   function selectPreset(id: string, minutes?: number, now = 0) {
     setSelection(id);
@@ -56,8 +57,18 @@ export function ExpirationSelector({
         </span>
         <span className="local-time-note"><Icon name="clock" size={14} /> Local time</span>
       </div>
-      <div className="expiration-options" role="group" aria-labelledby="expiry-label">
-        {PRESETS.map((preset) => (
+      <div className="expiration-options" role="group" aria-labelledby="expiry-label"
+        id={selection === "custom" ? undefined : "expiry"} tabIndex={-1} aria-describedby={helpId}>
+        <button
+          type="button"
+          className="expiration-option"
+          aria-pressed={selection === "none"}
+          disabled={disabled}
+          onClick={() => selectPreset("none")}
+        >
+          No expiry
+        </button>
+        {PRESETS.filter(({ minutes }) => minutes === 1_440).map((preset) => (
           <button
             key={preset.minutes}
             type="button"
@@ -78,18 +89,28 @@ export function ExpirationSelector({
         >
           Custom
         </button>
-        <button
-          type="button"
-          className="expiration-option"
-          aria-pressed={selection === "none"}
-          disabled={disabled}
-          onClick={() => selectPreset("none")}
-        >
-          No expiry
-        </button>
       </div>
+      <details className="expiry-more">
+        <summary>More durations <Icon name="chevron" size={15} /></summary>
+        <div className="expiration-options" role="group" aria-label="More expiration durations">
+          {extraPresets.map((preset) => (
+            <button
+              key={preset.minutes}
+              type="button"
+              className="expiration-option"
+              aria-pressed={selection === String(preset.minutes)}
+              disabled={disabled}
+              onClick={() => selectPreset(String(preset.minutes), preset.minutes, Date.now())}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </details>
       {selection === "custom" && (
-        <input
+        <div className="custom-expiry">
+          <label htmlFor="expiry">Expiration date and time</label>
+          <input
           id="expiry"
           type="datetime-local"
           value={value}
@@ -97,12 +118,13 @@ export function ExpirationSelector({
           onChange={(event) => onChange(event.target.value)}
           aria-invalid={error ? true : undefined}
           aria-describedby={helpId}
-        />
+          />
+        </div>
       )}
       <div id={helpId} className={error ? "field-error" : "expiration-summary"}>
         {error ? error : (
           <>
-            <strong>{selectedPreset ? `This payment link will expire in ${selectedPreset.description}.` : selection === "custom" ? "This payment link will expire at your selected time." : "This payment link will not expire."}</strong>
+            <strong>{selectedPreset ? `This payment link will expire in ${selectedPreset.description}.` : selection === "custom" && value ? "This payment link will expire at your selected time." : "This payment link will not expire."}</strong>
             {value && <span>{expiryDescription(value)}</span>}
           </>
         )}

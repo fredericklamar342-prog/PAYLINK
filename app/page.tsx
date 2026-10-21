@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/ui/intent-link";
 import { PaymentDemo } from "@/components/payment/payment-demo";
 import { Icon } from "@/components/ui/icon";
 export default function Home() {
@@ -16,8 +16,8 @@ export default function Home() {
             Just Share a Link.
           </h1>
           <p className="hero-description">
-            Create and share crypto payment requests on Monad Testnet. Simple for
-            you, easy for your customers.
+            An amount. A recipient. One clear request.
+            Share a link or QR code, and let your payer review every detail.
           </p>
           <div className="hero-actions">
             <Link className="button primary" href="/create">
@@ -43,14 +43,6 @@ export default function Home() {
         </div>
         <PaymentDemo />
       </section>
-      <div className="value-strip container">
-        <p>
-          From your request<br /><strong>to their wallet.</strong>
-        </p>
-        <span><Icon name="link" /> Share a link or QR code</span>
-        <span><Icon name="wallet" /> Paid directly to your wallet</span>
-        <span><Icon name="shield" /> Transaction visible on the explorer</span>
-      </div>
       <section className="how-section container" id="how-it-works">
         <div className="section-heading">
           <div>
@@ -58,8 +50,8 @@ export default function Home() {
             <h2>Create. Share. Pay.</h2>
           </div>
           <p>
-            A payment request your payer can review,
-            from the first detail to the final receipt.
+            From your first detail to their wallet.
+            Clear at every step, with approval always in their hands.
           </p>
         </div>
         <div className="steps">
@@ -80,7 +72,7 @@ export default function Home() {
               "03",
               "Pay",
               "The payer reviews the details, connects a wallet, and approves.",
-              "Submitted transactions remain awaiting verification in this MVP.",
+              "A submitted transaction stays pending until independently verified.",
             ],
           ].map(([n, title, text, detail]) => (
             <article key={n}>

@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/ui/intent-link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 

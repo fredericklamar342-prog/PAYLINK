@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/ui/intent-link";
 import { PaymentTicket } from "./payment-ticket";
 import { Icon } from "@/components/ui/icon";
+import { useFeedbackMotion } from "@/components/ui/use-feedback-motion";
 
 const examples = [
   { label: "Freelance work", amount: "5", description: "Website development" },
@@ -14,12 +15,13 @@ const examples = [
 export function PaymentDemo() {
   const [selected, setSelected] = useState(0);
   const example = examples[selected];
+  const ticket = useFeedbackMotion<HTMLDivElement>(String(selected));
 
   return (
     <div className="payment-demo">
       <div className="demo-heading">
         <span>
-          <Icon name="link" size={18} /> One link. All the details.
+          <Icon name="link" size={18} /> A request, ready to share.
         </span>
         <span className="preview-pill">Interactive example</span>
       </div>
@@ -36,7 +38,7 @@ export function PaymentDemo() {
           </button>
         ))}
       </div>
-      <div id="demo-ticket" className="demo-ticket">
+      <div id="demo-ticket" className="demo-ticket" ref={ticket}>
         <PaymentTicket
           amount={example.amount}
           description={example.description}
@@ -50,6 +52,9 @@ export function PaymentDemo() {
           </Link>
         </PaymentTicket>
       </div>
+      <p className="sr-only" role="status" aria-atomic="true">
+        {example.label}: {example.amount} USDC for {example.description}.
+      </p>
       <p className="demo-caption">
         Illustrative USDC examples. Real requests can use testnet MON or USDC.
       </p>

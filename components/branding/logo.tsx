@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/ui/intent-link";
 export function PayLinkLogo() {
   return (
     <Link href="/" className="logo" aria-label="PayLink home">

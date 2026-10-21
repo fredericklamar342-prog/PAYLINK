@@ -1,7 +1,5 @@
 "use client";
-import { useId, useState } from "react";
-import { useAnimate } from "motion/react-mini";
-import { useReducedMotion } from "motion/react";
+import { useId, useRef, useState } from "react";
 import {
   useConnection,
   useConnect,
@@ -16,7 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Feedback } from "@/components/ui/feedback";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
-import { feedbackMotion } from "@/components/ui/use-feedback-motion";
+import { animateFeedback } from "@/components/ui/use-feedback-motion";
 
 export function WalletButton({ primary = false }: { primary?: boolean }) {
   const { address, chainId, isConnected, isConnecting, isReconnecting } =
@@ -25,8 +23,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
   const connectors = useConnectors();
   const disconnect = useDisconnect();
   const switchChain = useSwitchChain();
-  const [dialog, animate] = useAnimate<HTMLDialogElement>();
-  const reducedMotion = useReducedMotion();
+  const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
   const [error, setError] = useState("");
@@ -45,15 +42,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
         onClick={() => {
           setError("");
           dialog.current?.showModal();
-          if (dialog.current && !reducedMotion)
-            void animate(
-              dialog.current,
-              {
-                opacity: [0.8, 1],
-                transform: ["translateY(6px)", "translateY(0px)"],
-              },
-              feedbackMotion,
-            );
+          if (dialog.current) animateFeedback(dialog.current, 6);
         }}
       >
         {busy ? <LoadingIndicator /> : <Icon name="wallet" size={17} />}
@@ -74,6 +63,9 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
           if (e.target === dialog.current) dialog.current.close();
         }}
       >
+        <div className="wallet-dialog-mark" aria-hidden="true">
+          <Icon name="wallet" size={26} />
+        </div>
         <div className="dialog-heading">
           <h2 id={titleId}>
             {isConnected ? "Your wallet" : "Connect your wallet"}
@@ -90,6 +82,10 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
           {isConnected
             ? "You stay in control of every payment."
             : "Choose a browser wallet. Connecting never moves your funds."}
+        </p>
+        <p className={`wallet-context ${wrongChain ? "wallet-context-warning" : ""}`}>
+          <span className="network-glyph" aria-hidden="true" />
+          {wrongChain ? "Switch to Monad Testnet to make this payment." : "Monad Testnet · Test tokens only"}
         </p>
         {address ? (
           <div className="stack">
@@ -167,6 +163,7 @@ export function WalletButton({ primary = false }: { primary?: boolean }) {
           </div>
         )}
         <Feedback message={error} />
+        <p className="wallet-assurance"><Icon name="shield" size={15} /> Every payment needs your approval.</p>
       </dialog>
     </>
   );
